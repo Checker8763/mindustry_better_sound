@@ -1,18 +1,26 @@
-// from bottom of scripting wiki  page 3
-// https://mindustrygame.github.io/wiki/modding/3-scripting/
-soundCache = {};
-function cachedLoadSound(path) {
-  cached = soundCache[path]
-  // return cached or newly loaded file
-  return (cached ?  cached:(soundCache[path] = loadSound(path)))
-}
+const sound_name = "base_under_attack";
+const base_attack_sound = loadSound(sound_name);
 
-Events.on(Trigger.teamCoreDamage, (_) => {
-  const mySound = cachedLoadSound("base_under_attack");
-  // engine will spawn this sound at this location (X,Y)
-  // TODO: get player position
-  mySound.at(1, 1);
-  //Debug toast to add something visually
-  // cause the sound maybe not in close proximity to player
-  Vars.ui.hudfrag.showToast("Core Attacked ?!?!??!?!?");
+//Debug Dialog
+Events.on(ClientLoadEvent, () => {
+  const myDialog = new BaseDialog("Better Sounds loaded");
+  myDialog.addCloseButton();
+  //TODO: Check how cont can be added to another row
+  myDialog.cont.add("Testing Info:");
+  myDialog.cont.row();
+  myDialog.cont.add("Custom Sound:" + base_attack_sound.toString());
+  myDialog.cont.row();
+  myDialog.cont.add("Builtin Sound: " + Sounds.respawning.toString());
+  //100% Volume, standart speed, no pan, no loop
+  base_attack_sound.play(1, 1, 0, false);
+  myDialog.show();
+});
+
+var played = false;
+Events.run(Trigger.teamCoreDamage, () => {
+  if (!played) {
+    base_attack_sound.play(1, 1, 0, false);
+    played = true;
+    Time.run(5*Time.toSeconds, () => (played = false));
+  }
 });
